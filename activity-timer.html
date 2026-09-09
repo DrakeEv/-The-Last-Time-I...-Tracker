@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Timers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            color-scheme: light dark;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --bg-surface: #f9f9f9;
+            --bg-card: #fff;
+            --border: #e0e0e0;
+            --accent-blue: #378add;
+            --accent-blue-hover: #2968a0;
+            --danger-red: #e24b4a;
+            --danger-red-hover: #c23535;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-primary: #e8e8e8;
+                --text-secondary: #999;
+                --text-muted: #666;
+                --bg-surface: #121212;
+                --bg-card: #1f1f1f;
+                --border: #333;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            padding: 2rem 1rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .form-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s;
+            margin-bottom: 0.75rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .timers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .timer-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .activity-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .elapsed-time {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .timer-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-blue-hover);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 13px;
+            width: auto;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: var(--danger-red-hover);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 2rem 1rem;
+            font-size: 14px;
+        }
+
+        .empty-state p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Activity Timers</h1>
+            <p>Track multiple activities</p>
+        </div>
+
+        <!-- Input form -->
+        <div class="form-section">
+            <label for="activityInput">Add a new timer</label>
+            <input
+                type="text"
+                id="activityInput"
+                placeholder="e.g., watered the grass"
+                autocomplete="off"
+            >
+            <p class="helper-text">Tracked from the moment you create it.</p>
+            <button class="btn-primary" id="addBtn">Add timer</button>
+        </div>
+
+        <!-- Timers display -->
+        <div id="timersList" class="timers-list"></div>
+        <div id="emptyState" class="empty-state">
+            <p>No timers yet. Add one above to get started.</p>
+        </div>
+    </div>
+
+    <script>
+        const activityInput = document.getElementById('activityInput');
+        const addBtn = document.getElementById('addBtn');
+        const timersList = document.getElementById('timersList');
+        const emptyState = document.getElementById('emptyState');
+
+        let timers = {};
+        let updateIntervals = {};
+
+        // Format elapsed time
+        function formatElapsed(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const totalMinutes = Math.floor(totalSeconds / 60);
+            const totalHours = Math.floor(totalMinutes / 60);
+            const days = Math.floor(totalHours / 24);
+
+            if (days > 0) {
+                const hours = totalHours % 24;
+                return `${days} day${days !== 1 ? 's' : ''}, ${hours}h`;
+            } else if (totalHours > 0) {
+                const minutes = totalMinutes % 60;
+                return `${totalHours}h ${minutes}m`;
+            } else {
+                const seconds = totalSeconds % 60;
+                return `${totalMinutes}m ${seconds}s`;
+            }
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return 'timer_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Save timers to localStorage
+        function saveTimers() {
+            localStorage.setItem('activityTimers', JSON.stringify(timers));
+        }
+
+        // Load timers from localStorage
+        function loadTimers() {
+            const saved = localStorage.getItem('activityTimers');
+            if (saved) {
+                try {
+                    timers = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load timers:', e);
+                    timers = {};
+                }
+            }
+        }
+
+        // Update elapsed time for a timer
+        function updateTimer(id) {
+            if (!timers[id]) return;
+
+            const now = Date.now();
+            const elapsed = now - timers[id].timestamp;
+            const timerEl = document.getElementById('elapsed-' + id);
+            if (timerEl) {
+                timerEl.textContent = formatElapsed(elapsed);
+            }
+        }
+
+        // Render all timers
+        function renderTimers() {
+            timersList.innerHTML = '';
+
+            const timerIds = Object.keys(timers);
+
+            if (timerIds.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            timerIds.forEach(id => {
+                const timer = timers[id];
+                const date = new Date(timer.timestamp);
+
+                const card = document.createElement('div');
+                card.className = 'timer-card';
+                card.innerHTML = `
+                    <div class="timer-info">
+                        <div class="activity-label">Last ${timer.activity}</div>
+                        <div class="elapsed-time" id="elapsed-${id}">0m 0s</div>
+                        <div class="timestamp">${date.toLocaleString()}</div>
+                    </div>
+                    <div class="timer-actions">
+                        <button class="btn-delete btn-small" data-id="${id}" title="Delete timer">✕</button>
+                    </div>
+                `;
+
+                timersList.appendChild(card);
+
+                // Set up delete button
+                card.querySelector('[data-id]').addEventListener('click', () => {
+                    deleteTimer(id);
+                });
+
+                // Update display and set up interval
+                updateTimer(id);
+                if (updateIntervals[id]) clearInterval(updateIntervals[id]);
+                updateIntervals[id] = setInterval(() => updateTimer(id), 1000);
+            });
+        }
+
+        // Add new timer
+        function addTimer() {
+            const activity = activityInput.value.trim();
+            if (!activity) return;
+
+            const id = generateId();
+            timers[id] = {
+                activity,
+                timestamp: Date.now()
+            };
+
+            activityInput.value = '';
+            saveTimers();
+            renderTimers();
+        }
+
+        // Delete timer
+        function deleteTimer(id) {
+            if (updateIntervals[id]) {
+                clearInterval(updateIntervals[id]);
+                delete updateIntervals[id];
+            }
+            delete timers[id];
+            saveTimers();
+            renderTimers();
+        }
+
+        // Event listeners
+        addBtn.addEventListener('click', addTimer);
+        activityInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addTimer();
+        });
+
+        // Initialize
+        loadTimers();
+        renderTimers();
+    </script>
+</body>
+</html>
